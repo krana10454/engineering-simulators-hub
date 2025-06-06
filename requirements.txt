@@ -1,0 +1,14 @@
+streamlit
+numpy
+matplotlib
+numba
+pandas
+plotly
+datetime
+# Optional: Add other libraries if your other simulators explicitly use them
+# scipy # Often used for more advanced mathematical operations, e.g., interpolation, integration
+# plotly # If you want to use interactive plots (Plotly Express, Plotly Graph Objects)
+# openpyxl # If any simulator reads/writes .xlsx files
+# scikit-learn # If Smart HVAC or other projects involve machine learning
+# fluids # For more advanced pipe flow calculations (if not doing from scratch)
+# CoolProp # For thermodynamic properties (if not using ideal gas/simple models)
