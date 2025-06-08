@@ -7,15 +7,20 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt # Import matplotlib for velocity profile visualization
 
-# --- Page Configuration ---
+# --- Page Configuration (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
-    page_title="Pipe Flow Pressure Drop Simulator (Multi-Segment & Plots)",
+    page_title="Pipe Flow Pressure Drop Simulator (Multi-Segment & Plots)", # You can choose which title you prefer
     page_icon="💧",
     layout="wide" # Using wide layout for better table and plot display
 )
 
-st.title("💧 Pipe Flow Pressure Drop Simulator (Multi-Segment & Plots)")
+# --- Add Home Button at the Top ---
+if st.button("🏠 Go to Home"):
+    st.switch_page("0_Home.py") # Correctly points to the root Home file
+
+st.title("💧 Pipe Flow Pressure Drop Simulator (Multi-Segment & Plots)") # Use this title or the one from set_page_config
 st.write("Calculate total major pressure losses for multiple pipe segments and explore parameter sensitivities.")
+st.markdown("---")
 
 # --- Fluid Properties (Assumed constant for all segments for simplicity) ---
 st.subheader("1. Fluid Properties (Constant for all segments)")
@@ -214,7 +219,7 @@ with st.expander("Configure Sensitivity Analysis Inputs"):
     col_plot_in1, col_plot_in2, col_plot_in3 = st.columns(3)
     with col_plot_in1:
         plot_D = st.number_input("Diameter (D) [m]", value=0.1, min_value=0.001, format="%.3f", key="plot_D")
-        plot_L = st.number_input("Length (L) [m]", value=100.0, min_value=0.1, format="%.1f", key="plot_L")
+        plot_L = st.number_input("Length (L) [m]", value=100.0, min_value=0.01, format="%.1f", key="plot_L") # Corrected min_value
     with col_plot_in2:
         plot_rho = st.number_input("Fluid Density (ρ) [kg/m³]", value=1000.0, min_value=0.1, format="%.2f", key="plot_rho")
         plot_mu = st.number_input("Fluid Dynamic Viscosity (μ) [Pa·s]", value=0.001, min_value=1e-7, format="%.4e", key="plot_mu")
@@ -398,4 +403,14 @@ st.pyplot(fig_profile) # Display the plot
 
 # --- Footer ---
 st.markdown("---")
-st.markdown(f'<p style="color: gray;">Developed by a Mechanical Engineer ⚙️</p>', unsafe_allow_html=True)
+
+# Inject custom CSS for centering text
+st.markdown("""
+    <style>
+    .centered-text {
+        text-align: center;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.markdown(f'<div class="centered-text"><p style="color: gray;">Developed by a Mechanical Engineer ⚙️</p></div>', unsafe_allow_html=True)

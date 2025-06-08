@@ -4,6 +4,21 @@ import streamlit as st
 from numba import njit
 import pandas as pd
 
+st.set_page_config(
+    page_title="F1 Brake Thermal Analysis",
+    page_icon="🏎️",
+    layout="wide"
+)
+
+# --- Add Home Button at the Top ---
+if st.button("🏠 Go to Home"):
+    st.switch_page("0_Home.py") # Correctly points to the root Home file
+
+st.title("🏎️ F1 Brake Thermal Analysis")
+st.markdown("Simulate the transient temperature distribution in a carbon-carbon brake disc with dynamic heat generation. Explore key performance indicators and how they change with different design and operating parameters.") # Aesthetic: More descriptive intro
+
+st.markdown("---")
+
 # --- 1. Material Properties (Carbon-Carbon Composite - Typical Values) ---
 RHO = 1800.0        # Density (kg/m^3)
 CP = 700.0          # Specific Heat Capacity (J/kg.K)
@@ -272,11 +287,8 @@ def run_brake_sim_wrapper(rho, cp, k, emissivity, stefan_boltzmann_const,
            braking_time_s, simulation_duration_s_input, max_cooling_rate
 
 
-# --- Streamlit UI ---
-st.set_page_config(layout="wide", page_title="F1 Brake Thermal Simulator", page_icon="🏎️") # Aesthetic: page icon
 
-st.title("🏎️ F1 Brake Thermal Analysis (1D Radial Model)") # Aesthetic: Emoji
-st.markdown("Simulate the transient temperature distribution in a carbon-carbon brake disc with dynamic heat generation. Explore key performance indicators and how they change with different design and operating parameters.") # Aesthetic: More descriptive intro
+
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Parameters")
@@ -743,4 +755,3 @@ if 'all_results' in st.session_state:
 
 else:
     st.info("💡 Get started by adjusting the parameters in the sidebar and clicking 'Run Simulation' to see the results!") # Aesthetic: More welcoming message
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Brake_disc_F1.jpg/800px-Brake_disc_F1.jpg", caption="Carbon-carbon brake disc (F1 Car)", use_container_width=True) # Aesthetic: Add an image

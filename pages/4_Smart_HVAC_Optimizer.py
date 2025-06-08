@@ -4,16 +4,26 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
-# --- Page Configuration ---
-st.set_page_config(layout="wide", page_title="Smart HVAC Energy Optimizer", page_icon="💡")
+st.set_page_config(
+    page_title="Smart HVAC Optimizer",
+    page_icon="💡",
+    layout="wide"
+)
 
-st.title("Smart HVAC System Energy Optimizer 💡")
+# --- Add Home Button at the Top ---
+if st.button("🏠 Go to Home"):
+    st.switch_page("0_Home.py") # Correctly points to the root Home file
+
+st.title("💡 Smart HVAC Optimizer")
 st.markdown("""
     This simulator helps optimize HVAC energy usage by modeling heat transfer,
     occupancy, insulation, and control strategies, now including humidity effects and PID control.
 """)
+st.markdown("---")
 
-st.subheader("1. System Parameters & Environmental Conditions")
+st.subheader("1. System Parameters & Environmental Conditions ")
+st.info("💡 Get started by adjusting the parameters in the sidebar ") # Aesthetic: More welcoming message
+
 
 # --- User Inputs (Streamlit Sidebar) ---
 st.sidebar.header("Room & HVAC Parameters")

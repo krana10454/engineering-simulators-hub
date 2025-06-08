@@ -4,6 +4,22 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
+st.set_page_config(
+    page_title="Thermodynamic Cycle Simulator",
+    page_icon="⚙️",
+    layout="wide"
+)
+
+# --- Add Home Button at the Top ---
+# This part assumes you have a '0_Home.py' file.
+# If not, you might need to remove or modify this line.
+if st.button("🏠 Go to Home"):
+    st.switch_page("0_Home.py") # Correctly points to the root Home file
+
+
+
+
+
 # Common constants for air (ideal gas)
 # Using common values for R, k, Cv, Cp as they are generally applicable across cycles for air
 R_gas_common = 0.287  # kJ/(kg·K)
@@ -11,14 +27,15 @@ k_common = 1.4      # Specific heat ratio (gamma) for air
 Cv_common = R_gas_common / (k_common - 1)  # kJ/(kg·K)
 Cp_common = k_common * Cv_common        # kJ/(kg·K)
 
-st.set_page_config(layout="wide", page_title="Thermodynamic Cycle Simulator", page_icon="⚙️")
 
 st.title("⚙️ Thermodynamic Cycle Simulator")
-
 st.markdown("""
     Explore the performance of ideal thermodynamic cycles.
     Enter the required parameters to calculate state point properties and visualize the cycles on P-v and T-s diagrams.
 """)
+st.markdown("---")
+
+
 
 cycle_choice = st.sidebar.selectbox(
     "Select Thermodynamic Cycle",
@@ -183,9 +200,9 @@ elif cycle_choice == "Brayton Cycle":
         if enable_reheat:
             P_reheat_default = P1 * np.sqrt(pressure_ratio) # A common approximation for optimal intermediate pressure
             reheat_pressure = st.number_input("Intermediate Reheat Pressure ($P_4$) [kPa]", 
-                                              value=P_reheat_default, 
-                                              min_value=P1 + 1, max_value=(P1 * pressure_ratio) - 1,
-                                              format="%.2f", key="reheat_P4_brayton")
+                                             value=P_reheat_default, 
+                                             min_value=P1 + 1, max_value=(P1 * pressure_ratio) - 1,
+                                             format="%.2f", key="reheat_P4_brayton")
 
 
     if st.button("Calculate Brayton Cycle Performance", key="calc_brayton_btn"):
@@ -205,8 +222,8 @@ elif cycle_choice == "Brayton Cycle":
 
             # --- Feasibility Checks (General Brayton) ---
             if T2 > T3: 
-                 st.error(f"Error: Compressor exit temperature T2 ({T2:.2f} K) is higher than turbine inlet temperature T3 ({T3:.2f} K). Please increase T3 or decrease pressure ratio.")
-                 st.stop()
+                st.error(f"Error: Compressor exit temperature T2 ({T2:.2f} K) is higher than turbine inlet temperature T3 ({T3:.2f} K). Please increase T3 or decrease pressure ratio.")
+                st.stop()
             
             # --- Conditional Calculations based on Advanced Features ---
             cycle_type_result = "brayton" # Default
@@ -441,74 +458,90 @@ if results:
     elif results['cycle_type'].startswith("brayton"): # This covers 'brayton', 'brayton_regen', 'brayton_reheat', 'brayton_reheat_regen'
         
         # P-v Diagram specific plotting logic
+        # For Brayton cycles, the compression and expansion are isentropic, and heat addition/rejection are constant pressure.
+        # We need to plot the isentropic curves as actual curves on P-v.
+        
+        # 1-2 Isentropic compression (always present)
+        P_pv_12 = np.linspace(P_vals[0], P_vals[1], 50)
+        v_pv_12 = v_vals[0] * (P_vals[0] / P_pv_12)**(1/k_common)
+        fig_pv.add_trace(go.Scatter(x=v_pv_12, y=P_pv_12, mode='lines', name='1-2 Isentropic Compression', line=dict(color='blue')))
+
         if results['cycle_type'] == "brayton_regen":
-            P_pv_12 = np.linspace(P_vals[0], P_vals[1], 50)
-            v_pv_12 = v_vals[0] * (P_vals[0] / P_pv_12)**(1/k_common)
-            fig_pv.add_trace(go.Scatter(x=v_pv_12, y=P_pv_12, mode='lines', name='1-2 Isentropic Compression', line=dict(color='blue')))
-            
+            # 2-2a Regeneration Heat In (Constant Pressure)
             fig_pv.add_trace(go.Scatter(x=[v_vals[1], v_vals[2]], y=[P_vals[1], P_vals[2]], mode='lines', name='2-2a Regeneration Heat In', line=dict(color='orange', dash='dash'))) 
+            # 2a-3 Constant Pressure Heat Addition
             fig_pv.add_trace(go.Scatter(x=[v_vals[2], v_vals[3]], y=[P_vals[2], P_vals[3]], mode='lines', name='2a-3 Constant Pressure Heat Addition', line=dict(color='red'))) 
             
+            # 3-4 Isentropic Expansion
             P_pv_34 = np.linspace(P_vals[3], P_vals[4], 50) 
             v_pv_34 = v_vals[3] * (P_vals[3] / P_pv_34)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_34, y=P_pv_34, mode='lines', name='3-4 Isentropic Expansion', line=dict(color='green'))) 
 
+            # 4-4a Regeneration Heat Out (Constant Pressure)
             fig_pv.add_trace(go.Scatter(x=[v_vals[4], v_vals[5]], y=[P_vals[4], P_vals[5]], mode='lines', name='4-4a Regeneration Heat Out', line=dict(color='brown', dash='dash'))) 
+            # 4a-1 Constant Pressure Heat Rejection
             fig_pv.add_trace(go.Scatter(x=[v_vals[5], v_vals[0]], y=[P_vals[5], P_vals[0]], mode='lines', name='4a-1 Constant Pressure Heat Rejection', line=dict(color='purple'))) 
 
         elif results['cycle_type'] == "brayton_reheat":
-            P_pv_12 = np.linspace(P_vals[0], P_vals[1], 50)
-            v_pv_12 = v_vals[0] * (P_vals[0] / P_pv_12)**(1/k_common)
-            fig_pv.add_trace(go.Scatter(x=v_pv_12, y=P_pv_12, mode='lines', name='1-2 Isentropic Compression', line=dict(color='blue')))
-
+            # 2-3 Constant Pressure Heat Addition 1
             fig_pv.add_trace(go.Scatter(x=[v_vals[1], v_vals[2]], y=[P_vals[1], P_vals[2]], mode='lines', name='2-3 Constant Pressure Heat Addition 1', line=dict(color='red')))
             
+            # 3-4 Isentropic Expansion 1
             P_pv_34 = np.linspace(P_vals[2], P_vals[3], 50)
             v_pv_34 = v_vals[2] * (P_vals[2] / P_pv_34)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_34, y=P_pv_34, mode='lines', name='3-4 Isentropic Expansion 1', line=dict(color='green')))
 
+            # 4-5 Constant Pressure Reheat
             fig_pv.add_trace(go.Scatter(x=[v_vals[3], v_vals[4]], y=[P_vals[3], P_vals[4]], mode='lines', name='4-5 Constant Pressure Reheat', line=dict(color='darkred', dash='dot'))) 
             
+            # 5-6 Isentropic Expansion 2
             P_pv_56 = np.linspace(P_vals[4], P_vals[5], 50)
             v_pv_56 = v_vals[4] * (P_vals[4] / P_pv_56)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_56, y=P_pv_56, mode='lines', name='5-6 Isentropic Expansion 2', line=dict(color='darkgreen')))
 
+            # 6-1 Constant Pressure Heat Rejection
             fig_pv.add_trace(go.Scatter(x=[v_vals[5], v_vals[0]], y=[P_vals[5], P_vals[0]], mode='lines', name='6-1 Constant Pressure Heat Rejection', line=dict(color='purple')))
 
         elif results['cycle_type'] == "brayton_reheat_regen":
             # P-v Diagram for Combined Reheat + Regeneration
-            P_pv_12 = np.linspace(P_vals[0], P_vals[1], 50)
-            v_pv_12 = v_vals[0] * (P_vals[0] / P_pv_12)**(1/k_common)
-            fig_pv.add_trace(go.Scatter(x=v_pv_12, y=P_pv_12, mode='lines', name='1-2 Isentropic Compression', line=dict(color='blue')))
-
+            # 2-2a Regeneration Heat In
             fig_pv.add_trace(go.Scatter(x=[v_vals[1], v_vals[2]], y=[P_vals[1], P_vals[2]], mode='lines', name='2-2a Regeneration Heat In', line=dict(color='orange', dash='dash')))
+            # 2a-3 Constant Pressure Heat Addition 1
             fig_pv.add_trace(go.Scatter(x=[v_vals[2], v_vals[3]], y=[P_vals[2], P_vals[3]], mode='lines', name='2a-3 Constant Pressure Heat Addition 1', line=dict(color='red')))
             
+            # 3-4 Isentropic Expansion 1
             P_pv_34 = np.linspace(P_vals[3], P_vals[4], 50)
             v_pv_34 = v_vals[3] * (P_vals[3] / P_pv_34)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_34, y=P_pv_34, mode='lines', name='3-4 Isentropic Expansion 1', line=dict(color='green')))
 
+            # 4-5 Constant Pressure Reheat
             fig_pv.add_trace(go.Scatter(x=[v_vals[4], v_vals[5]], y=[P_vals[4], P_vals[5]], mode='lines', name='4-5 Constant Pressure Reheat', line=dict(color='darkred', dash='dot')))
             
+            # 5-6 Isentropic Expansion 2
             P_pv_56 = np.linspace(P_vals[5], P_vals[6], 50)
             v_pv_56 = v_vals[5] * (P_vals[5] / P_pv_56)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_56, y=P_pv_56, mode='lines', name='5-6 Isentropic Expansion 2', line=dict(color='darkgreen')))
 
+            # 6-6a Regeneration Heat Out
             fig_pv.add_trace(go.Scatter(x=[v_vals[6], v_vals[7]], y=[P_vals[6], P_vals[7]], mode='lines', name='6-6a Regeneration Heat Out', line=dict(color='brown', dash='dash')))
+            # 6a-1 Constant Pressure Heat Rejection
             fig_pv.add_trace(go.Scatter(x=[v_vals[7], v_vals[0]], y=[P_vals[7], P_vals[0]], mode='lines', name='6a-1 Constant Pressure Heat Rejection', line=dict(color='purple')))
 
         else: # Original 4-state Brayton without regeneration or reheat
+            # 2-3 Constant Pressure Heat Addition
             fig_pv.add_trace(go.Scatter(x=[v_vals[1], v_vals[2]], y=[P_vals[1], P_vals[2]], mode='lines', name='2-3 Constant Pressure Heat Addition', line=dict(color='red')))
+            # 3-4 Isentropic Expansion
             P_pv_34 = np.linspace(P_vals[2], P_vals[3], 50)
             v_pv_34 = v_vals[2] * (P_vals[2] / P_pv_34)**(1/k_common)
             fig_pv.add_trace(go.Scatter(x=v_pv_34, y=P_pv_34, mode='lines', name='3-4 Isentropic Expansion', line=dict(color='green')))
+            # 4-1 Constant Pressure Heat Rejection
             fig_pv.add_trace(go.Scatter(x=[v_vals[3], v_vals[0]], y=[P_vals[3], P_vals[0]], mode='lines', name='4-1 Constant Pressure Heat Rejection', line=dict(color='purple')))
 
 
     # Add state points to P-v diagram
     fig_pv.add_trace(go.Scatter(x=v_vals, y=P_vals, mode='markers+text', 
-                                text=results["state_labels"], textposition="top right", 
-                                marker=dict(size=8, color='black'), showlegend=False))
+                                 text=results["state_labels"], textposition="top right", 
+                                 marker=dict(size=8, color='black'), showlegend=False))
     
     fig_pv.update_layout(
         title=f'Ideal {cycle_choice} P-v Diagram',
@@ -616,9 +649,9 @@ if results:
             s_vals[2] = s_vals[1] + Cp_common * np.log(T_vals[2] / T_vals[1]) # s_2a
             s_vals[3] = s_vals[2] + Cp_common * np.log(T_vals[3] / T_vals[2]) # s_3
             s_vals[4] = s_vals[3] # s_4
-            s_vals[5] = s_vals[4] + Cp_common * np.log(T_vals[4] / T_vals[3]) # s_5
+            s_vals[5] = s_vals[4] + Cp_common * np.log(T_vals[4] / T_vals[3]) # s_5 (T4 used to calculate s5 from s4)
             s_vals[6] = s_vals[5] # s_6
-            s_vals[7] = s_vals[6] + Cp_common * np.log(T_vals[6] / T_vals[5]) # s_6a
+            s_vals[7] = s_vals[6] + Cp_common * np.log(T_vals[6] / T_vals[5]) # s_6a (T6 used to calculate s7 from s6)
 
             fig_ts.add_trace(go.Scatter(x=[s_vals[0], s_vals[1]], y=[T_vals[0], T_vals[1]], mode='lines', name='1-2 Isentropic Compression', line=dict(color='blue')))
             
@@ -656,14 +689,14 @@ if results:
             fig_ts.add_trace(go.Scatter(x=s_ts_23, y=T_ts_23, mode='lines', name='2-3 Constant Pressure Heat Addition', line=dict(color='red')))
             fig_ts.add_trace(go.Scatter(x=[s_vals[2], s_vals[3]], y=[T_vals[2], T_vals[3]], mode='lines', name='3-4 Isentropic Expansion', line=dict(color='green')))
             s_ts_41 = np.linspace(s_vals[3], s_vals[0], 50)
-            T_ts_41 = T_vals[3] * np.exp((s_ts_41 - s_vals[3]) / Cv_common) 
+            T_ts_41 = T_vals[3] * np.exp((s_ts_41 - s_vals[3]) / Cp_common) 
             fig_ts.add_trace(go.Scatter(x=s_ts_41, y=T_ts_41, mode='lines', name='4-1 Constant Pressure Heat Rejection', line=dict(color='purple')))
 
 
     # Add state points to T-s diagram
     fig_ts.add_trace(go.Scatter(x=s_vals, y=T_vals, mode='markers+text', 
-                                text=results["state_labels"], textposition="top right", 
-                                marker=dict(size=8, color='black'), showlegend=False))
+                                 text=results["state_labels"], textposition="top right", 
+                                 marker=dict(size=8, color='black'), showlegend=False))
     
     fig_ts.update_layout(
         title=f'Ideal {cycle_choice} T-s Diagram',

@@ -6,12 +6,40 @@ from io import BytesIO
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# --- Configuration for Streamlit Page ---
-st.set_page_config(page_title="1D Heat Conduction Simulator", layout="centered")
+# D:\streamlit_apps\simulator\pages\1_Heat_Transfer_Simulator.py
 
-st.title("🔥 1D Heat Conduction Simulator (Steady + Transient)")
+# ALL IMPORTS MUST COME FIRST (already correct)
+
+# --- SET PAGE CONFIGURATION (MUST BE THE VERY FIRST STREAMLIT COMMAND) ---
+# This is the CORRECT and ONLY set_page_config call
+st.set_page_config(
+    page_title="1D Heat Conduction Simulator",
+    page_icon="🔥",
+    layout="wide" # Keeping layout="wide" from your first config, as it's usually preferred.
+)
+
+# --- Add Home Button at the Top ---
+# This button is a Streamlit command, so it must come AFTER set_page_config
+if st.button("🏠 Go to Home"):
+    st.switch_page("0_Home.py") # Correctly points to the root Home file
+
+st.title("🔥 1D Heat Conduction Simulator") # This is a Streamlit command, comes after set_page_config
+st.markdown("---")
+
+# --- Your existing Heat Conduction Simulator code will go here ---
+# Ensure all your simulation logic and other st. commands follow the initial setup
+st.write("This simulator is currently under development.")
+# ... (rest of your existing code for the 1D Heat Conduction Simulator) ...
+
+# DELETE THIS DUPLICATE CALL:
+# st.set_page_config(page_title="1D Heat Conduction Simulator", layout="centered") # DELETE THIS LINE
+
+# The st.title below is already present above, so no need to repeat
+# st.title("🔥 1D Heat Conduction Simulator (Steady + Transient)")
+
 
 # --- Enforce Dark Theme Only ---
+# This CSS block is fine to be here, after the set_page_config
 st.markdown("""
     <style>
         .stApp {
@@ -74,7 +102,7 @@ st.subheader("Rod Geometry & Boundary Conditions")
 def plot_rod_diagram(L, bc_left_type, T1, h_left, T_inf_left,
                      bc_right_type, T2, h_right, T_inf_right):
     fig, ax = plt.subplots(figsize=(8, 2), facecolor='#1e1e1e')
-    
+
     # Rod
     rod_y = 0.5
     ax.plot([0, L], [rod_y, rod_y], 'k-', linewidth=5, solid_capstyle='butt', color='#8B4513') # Brown rod
@@ -171,11 +199,11 @@ with st.sidebar:
             k_values = [k_func(val) for val in x]
             k_fig = go.Figure(data=go.Scatter(x=x, y=k_values, mode='lines', name='k(x)', line=dict(color='orange')),
                                 layout=go.Layout(title='Thermal Conductivity Profile k(x)',
-                                                 xaxis_title='Position (x)',
-                                                 yaxis_title='k [W/m·K]',
-                                                 font_color="white", paper_bgcolor="#1e1e1e", plot_bgcolor="#2b2b2b",
-                                                 xaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
-                                                 yaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white'))))
+                                                    xaxis_title='Position (x)',
+                                                    yaxis_title='k [W/m·K]',
+                                                    font_color="white", paper_bgcolor="#1e1e1e", plot_bgcolor="#2b2b2b",
+                                                    xaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
+                                                    yaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white'))))
             st.plotly_chart(k_fig, use_container_width=True)
 
 
@@ -233,7 +261,7 @@ with st.sidebar:
         alpha_input = st.number_input("Thermal Diffusivity (α) [m²/s]", value=1e-5, format="%e")
         rho = st.number_input("Density (ρ) [kg/m³]", value=2700.0)
         cp = st.number_input("Specific Heat (c_p) [J/kg·K]", value=900.0)
-        
+
         # Calculate alpha based on k, rho, cp (if k is constant for this calculation)
         k_avg_for_alpha = k_initial if k_vary_type == "Constant" else np.mean([k_func(val) for val in x])
         st.info(f"Thermal diffusivity (α) used: {alpha_input:.2e} m²/s. (Calculated based on average k: {k_avg_for_alpha / (rho * cp):.2e})") # Show both
@@ -242,13 +270,13 @@ with st.sidebar:
         dt = st.number_input(f"Time Step (Δt) [s] (Recommended max: {dt_auto:.2e}s)", value=0.01)
         if dt > dt_auto:
             st.warning(f"Warning: Time step Δt ({dt:.2e}s) is larger than the stability limit ({dt_auto:.2e}s) for constant k. This may lead to unstable results. Consider reducing Δt or increasing Nx.")
-        
+
         total_time = st.number_input("Total Simulation Time [s]", value=10.0)
         Nt = int(total_time / dt)
 
         st.subheader("Initial Conditions")
         initial_cond_type = st.radio("Initial Temperature Profile", ["Uniform", "Linear", "From Steady-State (if applicable)"])
-        
+
         T_uniform_init, T_left_init, T_right_init = 50.0, 100.0, 25.0 # Set default values for initial_cond_type
         if initial_cond_type == "Uniform":
             T_uniform_init = st.number_input("Uniform Initial Temperature [°C]", value=50.0)
@@ -264,13 +292,13 @@ with st.sidebar:
 
 # Display the Rod Diagram (using the actual values from inputs)
 st.image(plot_rod_diagram(L, bc_left_type, T1, h_left, T_inf_left,
-                           bc_right_type, T2, h_right, T_inf_right),
-         caption="Rod Schematic with Boundary Conditions", use_column_width=True)
+                            bc_right_type, T2, h_right, T_inf_right),
+          caption="Rod Schematic with Boundary Conditions", use_column_width=True)
 
 # --- Calculation ---
 if mode == "Steady-State":
     st.subheader("Steady-State Solution")
-    
+
     A = np.zeros((Nx, Nx))
     B = np.zeros(Nx)
 
@@ -344,17 +372,17 @@ if mode == "Steady-State":
         T = np.zeros(Nx) # Fallback to avoid error
 
     fig = go.Figure(data=go.Scatter(x=x, y=T, mode='lines', line=dict(color='red', width=2),
-                                    # --- NEW: Hover data for Plotly ---
-                                    hoverinfo='text',
-                                    hovertemplate='<b>Position:</b> %{x:.2f} m<br><b>Temperature:</b> %{y:.2f} °C<extra></extra>'
-                                    ),
-                      layout=go.Layout(title='Steady-State Temperature Distribution',
-                                       xaxis_title='Length (x) [m]',
-                                       yaxis_title='Temperature (T) [°C]',
-                                       font_color="white", paper_bgcolor="#1e1e1e", plot_bgcolor="#2b2b2b",
-                                       xaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
-                                       yaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
-                                       title_font=dict(color='white')))
+                                     # --- NEW: Hover data for Plotly ---
+                                     hoverinfo='text',
+                                     hovertemplate='<b>Position:</b> %{x:.2f} m<br><b>Temperature:</b> %{y:.2f} °C<extra></extra>'
+                                     ),
+                     layout=go.Layout(title='Steady-State Temperature Distribution',
+                                      xaxis_title='Length (x) [m]',
+                                      yaxis_title='Temperature (T) [°C]',
+                                      font_color="white", paper_bgcolor="#1e1e1e", plot_bgcolor="#2b2b2b",
+                                      xaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
+                                      yaxis=dict(gridcolor='gray', zerolinecolor='gray', title_font=dict(color='white'), tickfont=dict(color='white')),
+                                      title_font=dict(color='white')))
     st.plotly_chart(fig, use_container_width=True)
 
     if show_calc:
@@ -373,7 +401,7 @@ if mode == "Steady-State":
 
 else: # Transient Mode
     st.subheader("Transient Solution")
-    
+
     # --- Initial Conditions ---
     T = np.zeros(Nx)
     if initial_cond_type == "Uniform":
@@ -421,7 +449,7 @@ else: # Transient Mode
             A_ss[Nx-1, Nx-2] = k_at_L_minus_dx_half / dx
             A_ss[Nx-1, Nx-1] = -k_at_L_minus_dx_half / dx - h_right - hpAc * dx / 2
             B_ss[Nx-1] = -h_right * T_inf_right - q_gen * dx / 2 - hpAc * T_infinity_loss * dx / 2
-        
+
         try:
             T = np.linalg.solve(A_ss, B_ss)
         except np.linalg.LinAlgError:
@@ -430,25 +458,25 @@ else: # Transient Mode
 
     T_hist = [T.copy()]
     time_points = [0]
-    
+
     k_vals = np.array([k_func(val) for val in x]) # Ensure k_vals is defined for transient loop
 
     # Transient simulation loop
     for n in range(Nt):
         T_new = T.copy()
-        
+
         # Internal Nodes (i=1 to Nx-2)
         for i in range(1, Nx - 1):
             k_i_plus_half = k_func(x[i] + dx/2)
             k_i_minus_half = k_func(x[i] - dx/2)
-            
+
             # Finite difference for d/dx(k*dT/dx)
             term_k_dtdx = (k_i_plus_half * (T[i+1] - T[i]) / dx - k_i_minus_half * (T[i] - T[i-1]) / dx) / dx
-            
+
             heat_loss_term = hpAc * (T_infinity_loss - T[i])
 
             T_new[i] = T[i] + (dt / (rho * cp)) * (term_k_dtdx + q_gen + heat_loss_term)
-        
+
         # Apply Boundary Conditions for T_new
         # Left End (x=0)
         if bc_left_type == "Fixed Temperature (Dirichlet)":
@@ -458,13 +486,13 @@ else: # Transient Mode
             # Energy balance on a half-volume at node 0 for insulated boundary
             # (rho*cp*dx/2) * dT/dt = k_half * (T1-T0)/dx + q_gen*dx/2 + hpAc*(T_infinity_loss - T0)*dx/2
             T_new[0] = T[0] + (dt / (rho * cp * dx / 2)) * \
-                       (k_half * (T[1] - T[0]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[0]) * dx / 2)
+                             (k_half * (T[1] - T[0]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[0]) * dx / 2)
         elif bc_left_type == "Convective (Robin)":
             k_at_0_plus_dx_half = k_func(x[0] + dx/2)
             # Energy balance on a half-volume at node 0 for convective boundary
             # (rho*cp*dx/2) * dT/dt = h_left * (T_inf_left - T0) + k_at_0_plus_dx_half * (T1-T0)/dx + q_gen*dx/2 + hpAc*(T_infinity_loss - T0)*dx/2
             T_new[0] = T[0] + (dt / (rho * cp * dx / 2)) * \
-                       (h_left * (T_inf_left - T[0]) + k_at_0_plus_dx_half * (T[1] - T[0]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[0]) * dx / 2)
+                             (h_left * (T_inf_left - T[0]) + k_at_0_plus_dx_half * (T[1] - T[0]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[0]) * dx / 2)
 
         # Right End (x=L)
         if bc_right_type == "Fixed Temperature (Dirichlet)":
@@ -474,13 +502,13 @@ else: # Transient Mode
             # Energy balance on a half-volume at node Nx-1 for insulated boundary
             # (rho*cp*dx/2) * dT/dt = -k_half * (T_Nx-1 - T_Nx-2)/dx + q_gen*dx/2 + hpAc*(T_infinity_loss - T_Nx-1)*dx/2
             T_new[Nx-1] = T[Nx-1] + (dt / (rho * cp * dx / 2)) * \
-                          (-k_half * (T[Nx-1] - T[Nx-2]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[Nx-1]) * dx / 2)
+                                 (-k_half * (T[Nx-1] - T[Nx-2]) / dx + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[Nx-1]) * dx / 2)
         elif bc_right_type == "Convective (Robin)":
             k_at_L_minus_dx_half = k_func(x[Nx-1] - dx/2)
             # Energy balance on a half-volume at node Nx-1 for convective boundary
             # (rho*cp*dx/2) * dT/dt = -k_at_L_minus_dx_half * (T_Nx-1 - T_Nx-2)/dx + h_right * (T_inf_right - T_Nx-1) + q_gen*dx/2 + hpAc*(T_infinity_loss - T_Nx-1)*dx/2
             T_new[Nx-1] = T[Nx-1] + (dt / (rho * cp * dx / 2)) * \
-                          (-k_at_L_minus_dx_half * (T[Nx-1] - T[Nx-2]) / dx + h_right * (T_inf_right - T[Nx-1]) + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[Nx-1]) * dx / 2)
+                                 (-k_at_L_minus_dx_half * (T[Nx-1] - T[Nx-2]) / dx + h_right * (T_inf_right - T[Nx-1]) + q_gen * dx / 2 + hpAc * (T_infinity_loss - T[Nx-1]) * dx / 2)
 
         T = T_new
         T_hist.append(T.copy())
@@ -489,10 +517,10 @@ else: # Transient Mode
     # --- Plotly Figure for Animation (Always Dark Theme) ---
     fig = go.Figure(
         data=[go.Scatter(x=x, y=T_hist[0], mode='lines', line=dict(color='blue', width=2),
-                                    # --- NEW: Hover data for Plotly ---
-                                    hoverinfo='text',
-                                    hovertemplate='<b>Position:</b> %{x:.2f} m<br><b>Temperature:</b> %{y:.2f} °C<extra></extra>'
-                                    )],
+                                     # --- NEW: Hover data for Plotly ---
+                                     hoverinfo='text',
+                                     hovertemplate='<b>Position:</b> %{x:.2f} m<br><b>Temperature:</b> %{y:.2f} °C<extra></extra>'
+                                     )],
         layout=go.Layout(
             xaxis=dict(range=[0, L], title="Length (x) [m]"),
             yaxis=dict(range=[np.min(T_hist) - 5, np.max(T_hist) + 5], title="Temperature (T) [°C]"),
